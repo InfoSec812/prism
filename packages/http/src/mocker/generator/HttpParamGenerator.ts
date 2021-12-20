@@ -17,7 +17,13 @@ export function improveSchema(schema: JSONSchema): JSONSchema {
     }
   }
 
-  if (newSchema.type === 'string' && !newSchema.format && !newSchema.enum && !newSchema.pattern) {
+  if (
+    newSchema.type === 'string' &&
+    !newSchema.format &&
+    !newSchema.enum &&
+    !newSchema.pattern &&
+    !newSchema['x-faker']
+  ) {
     newSchema['x-faker'] = 'lorem.word';
   } else if (newSchema.type === 'object' && newSchema.properties) {
     newSchema.properties = Object.entries(newSchema.properties).reduce((r, [k, v]) => {
