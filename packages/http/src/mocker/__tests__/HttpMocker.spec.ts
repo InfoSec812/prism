@@ -9,6 +9,7 @@ import { IHttpRequest, JSONSchema } from '../../types';
 import helpers from '../negotiator/NegotiatorHelpers';
 import { assertLeft, assertRight } from '@stoplight/prism-core/src/__tests__/utils';
 import { runCallback } from '../callback/callbacks';
+import { body } from '../../validator/deserializers/index';
 
 jest.mock('../callback/callbacks', () => ({
   runCallback: jest.fn(() => () => () => undefined),
@@ -25,6 +26,7 @@ describe('mocker', () => {
       properties: {
         name: { type: 'string' },
         surname: { type: 'string', format: 'email' },
+        created: { type: 'string', format: 'date-time', 'x-faker': 'date.recent' } as JSONSchema,
       },
       required: ['name', 'surname'],
     };
@@ -160,6 +162,40 @@ describe('mocker', () => {
           return expect(result).toHaveProperty('body', {
             name: expect.any(String),
             surname: expect.any(String),
+            created: expect.any(String),
+          });
+        });
+      });
+
+      it('returns dynamic example where date.recent is correct', () => {
+        jest.spyOn(helpers, 'negotiateOptionsForValidRequest').mockReturnValue(
+          right({
+            code: '202',
+            mediaType: 'test',
+            schema: mockResource.responses[0].contents![0].schema,
+            headers: [],
+          })
+        );
+
+        const response = mock({
+          config: { dynamic: true },
+          resource: mockResource,
+          input: mockInput,
+        })(logger);
+
+        assertRight(response, result => {
+          const now = Date.now();
+          const lastWeek = now - 4233600000;
+          // @ts-ignore
+          const createdDate = Date.parse(result?.body?.created);
+
+          expect(createdDate).toBeLessThan(now);
+          expect(createdDate).toBeGreaterThan(lastWeek);
+
+          return expect(result).toHaveProperty('body', {
+            name: expect.any(String),
+            surname: expect.any(String),
+            created: expect.any(String),
           });
         });
       });
