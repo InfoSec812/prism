@@ -51,6 +51,14 @@ describe('HttpParamGenerator', () => {
         });
       });
 
+      describe('x-faker attribute set', () => {
+        const improvedSchema = improveSchema({ type: 'string', 'x-faker': 'internet.username' });
+
+        it('should have the x-faker extension', () => {
+          expect(improvedSchema).toHaveProperty('x-faker', 'internet.username');
+        });
+      });
+
       describe.each<[string, object]>([
         ['format', { format: 'email' }],
         ['enum', { enum: [1, 2, 3] }],
